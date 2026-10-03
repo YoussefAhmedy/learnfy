@@ -81,8 +81,11 @@ Flutter analyze + 8 product/validator/OTP tests PASS. No tests disabled.
 
 **Phase 3/5 database deployment work in progress**: two provider-specific migration assemblies,
 guarded database CLI, recovered catalog development seed, exact money validation. Next CI
-will generate migrations from the real EF model; lock graph temporarily regenerates because
-three projects were added. Import generated code/locks, inspect and test, then restore locked mode.
+generated both provider migrations from the real EF model (run 37093032815): all builds,
+16 backend tests, 14 web tests and 8 mobile tests PASS. Generated code/locks recovered through
+Check API and inspected. SQLite apply/current-model/rollback, unknown-table preservation and
+exact integer prices pass. Locked mode restored; one-time generation step removed.
+Next CI additionally runs a REAL isolated SQL Server container and the guarded dev setup script.
 
 ### Added/fixed in this continuation
 
@@ -137,8 +140,12 @@ three projects were added. Import generated code/locks, inspect and test, then r
   CI confirms 9/9 backend API/relational tests passing. Lockfiles recovered through Check API
   reports and committed; NuGet restores now enforce locked mode. Local SDK downloads remain
   blocked. Pushed recovery/stabilization checkpoints only; no final PR.
-- No migrations have been generated/applied yet. Runtime must not use EnsureCreated or blindly
-  apply historical SQL. Relational test database alone uses EnsureCreated for isolated tests.
+- Provider migrations generated/compiled/inspected: SQL Server `20261003032401_InitialLearnfy`,
+  SQLite `20261003032406_InitialLearnfy`. SQLite migration apply/reapply/current-model/rollback
+  and unknown-schema guard tests PASS. Real SQL Server migration/rollback/guard test added to
+  CI with a random disposable database/password; never deletes configured user databases.
+  No production database is configured/applied. API runtime never uses EnsureCreated.
+  Development scripts and database adoption guidance added; CI smoke test still pending.
 
 ### Resume immediately here
 

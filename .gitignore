@@ -139,3 +139,6 @@ app.*.symbols
 !**/packages.lock.json
 
 **/test-results.jsonl
+
+# Local development database/protection keys
+.data/

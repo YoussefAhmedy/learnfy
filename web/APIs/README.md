@@ -1,69 +1,45 @@
-# 📦 IBSRA-API's : CourseHub API Suite – Modular Backend for Smart Learning Platform :
-A robust and modular backend system composed of three fully documented RESTful APIs, designed for scalable, secure, and personalized online learning experiences.
+# Learnfy API suite
 
-## 🔐 **First API: Authentication API**
-- **Login**: Email + Password → Returns JWT token and welcome message
-- **Register**: Creates new user with email, username, phone number
-- **Forget Password**: Generates reset token for password recovery
-- **Reset Password**: Updates password using reset token
-- **JWT Integration**: Secure token-based authentication
+The original authentication/course/category service and repository layers are retained and
+repaired on .NET 10. `Learnfy.Data` owns their shared relational model. See root README and
+`docs/DATABASE.md` for configuration and migration commands. Do not run the historical SQL
+or use generated `obj` metadata as evidence of a successful build.
 
-## 📚 **Second API: Course Recommendations API**
-- **General Recommendations**: Get courses with filtering, sorting, pagination
-- **Personalized Recommendations**: JWT-protected endpoint for user-specific suggestions
-- **Trending Courses**: Most popular courses
-- **Course Details**: Individual course information
-- **Search Functionality**: Advanced course search with multiple filters
+## Implemented routes
 
-## 📂 **Third API: Categories API**
-- **All Categories**: Returns complete list of application categories
-- **Popular Categories**: Most popular categories by course count
-- **Category Details**: Specific category with popular courses
-- **Courses by Category**: Filtered courses within a category
-- **Category Statistics**: Analytics and metrics
+Auth (`5204`):
+- `POST /api/auth/register` → 201, validated unique identity and BCrypt hash; never accepts role
+- `POST /api/auth/login` → 200 / 401, short-lived signed token and allowlisted user DTO
+- `GET /api/auth/me` → authenticated current user
+- `POST /api/auth/logout` → revoke all current user's access tokens via security stamp
+- `POST /api/auth/forgot-password` → uniform 202 if configured; explicit 503 if mail unavailable
+- `POST /api/auth/reset-password` → atomic one-use hashed token, password/session invalidation
 
-## 🛠️ **Key Features Implemented:**
+Courses (`5174`):
+- `GET /api/courses`, `/api/courses/search`, `/api/courses/recommendations`
+- `GET /api/courses/trending?count=10` (top-rated, not claimed as behavioral popularity)
+- `GET /api/courses/{id}` → 200 / 404
+- `GET /api/courses/recommendations/personalized` → verified token subject only; no userId route
 
-### **Security:**
-- JWT token generation and validation
-- Password hashing with BCrypt
-- SQL injection prevention with parameterized queries
-- CORS support for cross-origin requests
+Filters: `SearchTerm`, `Category`, `Instructor`, `MinPrice`, `MaxPrice`, `MinRating`, `Page`,
+`PageSize` (1–100), `SortBy` (rating/price/name/newest/recommended), `SortOrder` (asc/desc).
+Sorting is global and deterministic before pagination; inactive categories/unpublished courses
+are not exposed. Ranking preserves the original rating/editorial formula; it is **not AI**.
 
-### **Database Design:**
-- Users table with authentication fields
-- Courses table with comprehensive course data
-- Categories table with metadata and course counts
-- Automatic triggers for maintaining data consistency
+Categories (`5058`):
+- `GET /api/categories`, `/api/categories/popular?count=5`
+- `GET /api/categories/{id}`, `/api/categories/by-name/{name}` → active public details
+- `includeInactive=true` requires Admin; course counts are computed from published rows
 
-### **API Features:**
-- RESTful design with proper HTTP methods
-- Comprehensive error handling
-- Pagination support
-- Flexible filtering and sorting
-- JSON responses with consistent structure
+Every service: `/health/live`, `/health/ready`; development-only `/openapi/v1.json`.
+Errors use proper HTTP statuses and safe ProblemDetails with trace IDs. CORS uses exact origins
+(or same-origin proxy by default). JWT revocation/active-user checks also run in catalog APIs.
+Rate limiting, request validation and secure response headers are implemented, not inferred
+from a dependency declaration.
 
-### **Sample Data:**
-- 10+ courses across different categories
-- 10+ categories (Software Development, Data Science, Mathematics, etc.)
-- Test users for authentication
+## Not implemented / not production-certified
 
-## 📋 **API Endpoints Summary:**
-
-### Authentication:
-- `POST /api/auth/login`
-- `POST /api/auth/register`
-- `POST /api/auth/forgot-password`
-- `POST /api/auth/reset-password`
-
-### Course Recommendations:
-- `GET /api/courses/recommendations`
-- `GET /api/courses/recommendations/personalized` (JWT required)
-- `GET /api/courses/trending`
-- `GET /api/courses/{id}`
-
-### Categories:
-- `GET /api/categories`
-- `GET /api/categories/popular`
-- `GET /api/categories/{id}`
-- `GET /api/categories/{name}/courses`
+No cart/orders/payment/fulfillment/AI/admin authoring/notification endpoints are claimed here.
+Category-course/statistics endpoints described in the initial README remain a tracked gap;
+course filtering is available through `/api/courses?Category=...`. Password recovery provider
+acceptance is not proof of inbox delivery. See `docs/REQUIREMENTS.md` for the full remaining scope.

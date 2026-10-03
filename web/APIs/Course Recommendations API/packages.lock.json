@@ -301,6 +301,8 @@
         "type": "Project",
         "dependencies": {
           "Learnfy.Data": "[1.0.0, )",
+          "Learnfy.Migrations.SqlServer": "[1.0.0, )",
+          "Learnfy.Migrations.Sqlite": "[1.0.0, )",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.12, )",
           "Microsoft.AspNetCore.OpenApi": "[10.0.12, )"
         }
@@ -310,6 +312,18 @@
         "dependencies": {
           "Microsoft.EntityFrameworkCore.SqlServer": "[10.0.12, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )"
+        }
+      },
+      "learnfy.migrations.sqlite": {
+        "type": "Project",
+        "dependencies": {
+          "Learnfy.Data": "[1.0.0, )"
+        }
+      },
+      "learnfy.migrations.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "Learnfy.Data": "[1.0.0, )"
         }
       }
     }

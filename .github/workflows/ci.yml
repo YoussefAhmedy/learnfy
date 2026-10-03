@@ -36,28 +36,34 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
-      - run: dotnet restore Learnfy.sln -p:RestorePackagesWithLockFile=true
+      - run: dotnet restore Learnfy.sln --locked-mode
       - run: |
           mkdir -p TestResults
           set -o pipefail
           dotnet build Learnfy.sln --configuration Release --no-restore 2>&1 | tee TestResults/build.log
-      - name: Generate initial provider-specific migrations (one-time recovery step)
-        env:
-          ConnectionStrings__DefaultConnection: 'Server=localhost;Database=learnfy_design;Integrated Security=true;TrustServerCertificate=true'
+      - name: Start isolated SQL Server for migration integration tests
         run: |
-          set -o pipefail
-          {
-            dotnet tool restore
-            Database__Provider=SqlServer dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.SqlServer --startup-project 'web/APIs/Authentication API' --output-dir Migrations
-            Database__Provider=Sqlite ConnectionStrings__DefaultConnection='Data Source=design-only.db' dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.Sqlite --startup-project 'web/APIs/Authentication API' --output-dir Migrations
-            dotnet build Learnfy.sln --configuration Release --no-restore
-          } 2>&1 | tee TestResults/migrations.log
+          password="CI-only-$(openssl rand -hex 24)!"
+          echo "::add-mask::$password"
+          echo "LEARNFY_TEST_SQLSERVER=Server=localhost,1433;User Id=sa;Password=$password;Encrypt=True;TrustServerCertificate=True" >> "$GITHUB_ENV"
+          docker run -d --name learnfy-sql-ci -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_SA_PASSWORD="$password" -p 1433:1433 mcr.microsoft.com/mssql/server:2025-latest
+          for attempt in $(seq 1 40); do
+            if docker exec learnfy-sql-ci /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$password" -C -Q 'SELECT 1' >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          echo 'SQL Server did not become ready.' >&2
+          exit 1
       - run: dotnet test Learnfy.sln --configuration Release --no-build --logger trx --results-directory TestResults
+      - name: Smoke-test guarded development setup
+        run: bash scripts/setup-development.sh --seed
       - name: Publish backend test diagnostics
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/ci_report.py backend '${{ job.status }}'
+      - name: Stop integration database
+        if: always()
+        run: docker rm -f learnfy-sql-ci || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
@@ -79,7 +85,7 @@ jobs:
           channel: stable
           flutter-version: '3.47.6'
           cache: true
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
       - run: flutter analyze
       - name: Run mobile tests
         run: |

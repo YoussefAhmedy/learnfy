@@ -305,6 +305,18 @@
           "Microsoft.EntityFrameworkCore.SqlServer": "[10.0.12, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )"
         }
+      },
+      "learnfy.migrations.sqlite": {
+        "type": "Project",
+        "dependencies": {
+          "Learnfy.Data": "[1.0.0, )"
+        }
+      },
+      "learnfy.migrations.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "Learnfy.Data": "[1.0.0, )"
+        }
       }
     }
   }
