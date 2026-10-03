@@ -14,7 +14,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 kind, status = sys.argv[1:3]
-root = Path.cwd()
+root = Path(os.environ.get("GITHUB_WORKSPACE", str(Path.cwd())))
 failures = []
 summary = []
 if kind == "mobile":
@@ -25,6 +25,8 @@ if kind == "mobile":
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
                 continue
             if event.get("type") == "error":
                 failures.append(str(event.get("error", "")) + "\n" + str(event.get("stackTrace", "")))
@@ -52,7 +54,7 @@ else:
 
 files = {str(path.relative_to(root)): path.read_text() for path in allowed_files if path.is_file()}
 encoded = base64.b64encode(gzip.compress(json.dumps(files).encode(), mtime=0)).decode()
-text = "\n\n".join(failures)[:40000] or "No test failure details recorded."
+text = ("\n\n".join(failures).encode("utf-8", errors="replace")[:20000].decode("utf-8", errors="replace") or "No test failure details recorded.")
 text += f"\n\n<!-- learnfy-ci-files:v1:{encoded} -->"
 if len(text.encode()) > 65000:
     raise ValueError("Check report too large; do not silently truncate generated files")
@@ -66,7 +68,13 @@ request = urllib.request.Request(
     data=json.dumps(payload).encode(), method="POST",
     headers={"Authorization": f'Bearer {os.environ["GH_TOKEN"]}', "Accept": "application/vnd.github+json", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28"},
 )
-with urllib.request.urlopen(request, timeout=30) as response:
-    result = json.load(response)
+try:
+    with urllib.request.urlopen(request, timeout=30) as response:
+        result = json.load(response)
+except Exception as error:
+    # Explicit annotation is accessible even if Check creation fails. Never print headers/token.
+    message = f"{type(error).__name__}: {error}".replace("%", "%25").replace("\n", "%0A").replace("\r", "%0D")
+    print(f"::error file=scripts/ci_report.py,title=CI report publishing failed::{message}")
+    raise
 print("\n".join(summary))
 print(f'Published {kind} test report: {result["html_url"]}')
