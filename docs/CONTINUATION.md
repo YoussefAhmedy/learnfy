@@ -120,15 +120,20 @@ Phase 1 recovery complete; **Phase 2 stabilization checkpoint implemented, backe
 - Web `npm run validate`: PASS (typecheck, lint, 13 tests, production build).
 - Web `npm audit --audit-level=high`: PASS, zero vulnerabilities (all dependencies).
 - All six .csproj XML/project-reference checks: PASS; `git diff --check`: PASS.
-- Backend source/tests and mobile fixes are **NOT YET COMPILED/EXECUTED**; local SDK/toolchain
-  downloads remain blocked. A validation checkpoint push may trigger CI; that is NOT a final PR.
+- CI run [37091418373](https://github.com/YoussefAhmedy/learnfy/actions/runs/37091418373): web PASS,
+  .NET restore/build/tests PASS; Flutter analyze PASS, tests 7 PASS / 1 FAIL. Failure appears in
+  the product widget test; exact diagnostic not yet available. Remote log/artifact downloads also
+  fail TLS EOF. Added a GitHub Check API reporting channel; do not skip or weaken the failing test.
+  Local SDK downloads remain blocked. Pushed recovery/stabilization checkpoints only; no final PR.
 - No migrations have been generated/applied yet. Runtime must not use EnsureCreated or blindly
   apply historical SQL. Relational test database alone uses EnsureCreated for isolated tests.
 
 ### Resume immediately here
 
-1. Run CI on the fixed session branch; inspect actual compiler/analyzer/test failures and fix
-   them. Do not stack commerce/AI/new UI on an unvalidated core. No final PR yet.
+1. Read the "Learnfy mobile test report" check output after the next CI push; fix the one failing
+   widget test/product defect. Read backend counts and generated lockfiles from the corresponding
+   Check API output. Never print secret environment variables or provider bodies in reports.
+   Do not stack commerce/AI/new UI on an unvalidated core. No final PR yet.
 2. Generate **separate SQL Server / SQLite migration assemblies** against the actual shared
    context; inspect and test upgrade/rollback, money conversion and constraints. Do not reuse
    SQL Server-only column definitions in SQLite or suppress pending-model-change warnings.

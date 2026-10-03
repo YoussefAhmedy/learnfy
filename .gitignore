@@ -137,3 +137,5 @@ app.*.symbols
 # Application lockfiles are reproducibility artifacts.
 !**/pubspec.lock
 !**/packages.lock.json
+
+**/test-results.jsonl

@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  checks: write
 concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
@@ -38,6 +39,11 @@ jobs:
       - run: dotnet restore Learnfy.sln -p:RestorePackagesWithLockFile=true
       - run: dotnet build Learnfy.sln --configuration Release --no-restore
       - run: dotnet test Learnfy.sln --configuration Release --no-build --logger trx --results-directory TestResults
+      - name: Publish backend test diagnostics
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/ci_report.py backend '${{ job.status }}'
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
@@ -61,7 +67,16 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - name: Run mobile tests
+        run: |
+          set -o pipefail
+          flutter test --machine | tee test-results.jsonl
+      - name: Publish mobile test diagnostics
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/ci_report.py mobile '${{ job.status }}'
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
