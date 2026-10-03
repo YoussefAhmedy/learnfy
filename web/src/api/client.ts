@@ -33,11 +33,12 @@ export async function apiRequest(path: string, options: ApiRequestOptions = {}):
   const headers = new Headers({ Accept: 'application/json' })
   if (options.body !== undefined) headers.set('Content-Type', 'application/json')
   if (options.token) headers.set('Authorization', `Bearer ${options.token}`)
+  const body = options.body === undefined ? undefined : JSON.stringify(options.body)
   let response: Response
   try {
     response = await fetch(path, {
       method: options.method || 'GET', headers, credentials: 'same-origin',
-      body: options.body === undefined ? undefined : JSON.stringify(options.body), signal: options.signal,
+      body, signal: options.signal,
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error

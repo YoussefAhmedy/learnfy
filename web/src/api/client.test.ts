@@ -44,6 +44,11 @@ describe('same-origin API transport', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
     await expect(apiRequest('/api/courses')).rejects.toMatchObject({ status: 0 })
   })
+  it('does not hide invalid request serialization as a network problem', async () => {
+    const request = vi.fn(); vi.stubGlobal('fetch', request)
+    await expect(apiRequest('/api/auth/login', { method: 'POST', body: 1n })).rejects.toBeInstanceOf(TypeError)
+    expect(request).not.toHaveBeenCalled()
+  })
   it('preserves cancellation', async () => {
     const abort = new DOMException('Cancelled', 'AbortError')
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abort))

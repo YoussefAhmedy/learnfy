@@ -45,6 +45,10 @@ if kind == "mobile":
         summary.append("Mobile test report was not generated; inspect prior job steps.")
     allowed_files = [root / "mobile/pubspec.lock"]
 elif kind == "backend":
+    if status != "success":
+        for log in [root / "TestResults/build.log", root / "TestResults/migrations.log"]:
+            if log.exists():
+                failures.append(log.read_text(errors="replace")[-16000:])
     for report in (root / "TestResults").glob("*.trx"):
         tree = ET.parse(report)
         ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}

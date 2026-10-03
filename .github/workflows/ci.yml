@@ -37,15 +37,21 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet restore Learnfy.sln -p:RestorePackagesWithLockFile=true
-      - run: dotnet build Learnfy.sln --configuration Release --no-restore
+      - run: |
+          mkdir -p TestResults
+          set -o pipefail
+          dotnet build Learnfy.sln --configuration Release --no-restore 2>&1 | tee TestResults/build.log
       - name: Generate initial provider-specific migrations (one-time recovery step)
         env:
           ConnectionStrings__DefaultConnection: 'Server=localhost;Database=learnfy_design;Integrated Security=true;TrustServerCertificate=true'
         run: |
-          dotnet tool restore
-          Database__Provider=SqlServer dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.SqlServer --startup-project 'web/APIs/Authentication API' --output-dir Migrations
-          Database__Provider=Sqlite ConnectionStrings__DefaultConnection='Data Source=design-only.db' dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.Sqlite --startup-project 'web/APIs/Authentication API' --output-dir Migrations
-          dotnet build Learnfy.sln --configuration Release --no-restore
+          set -o pipefail
+          {
+            dotnet tool restore
+            Database__Provider=SqlServer dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.SqlServer --startup-project 'web/APIs/Authentication API' --output-dir Migrations
+            Database__Provider=Sqlite ConnectionStrings__DefaultConnection='Data Source=design-only.db' dotnet ef migrations add InitialLearnfy --project web/APIs/Learnfy.Migrations.Sqlite --startup-project 'web/APIs/Authentication API' --output-dir Migrations
+            dotnet build Learnfy.sln --configuration Release --no-restore
+          } 2>&1 | tee TestResults/migrations.log
       - run: dotnet test Learnfy.sln --configuration Release --no-build --logger trx --results-directory TestResults
       - name: Publish backend test diagnostics
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
