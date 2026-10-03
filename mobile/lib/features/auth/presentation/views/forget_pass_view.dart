@@ -1,53 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:learnfy/core/helper_functions/validator.dart';
-import 'package:learnfy/core/theme/app_text_styles.dart';
-import 'package:learnfy/core/widgets/custom_app_bar.dart';
-import 'package:learnfy/core/widgets/primary_button.dart';
-import 'package:learnfy/features/auth/presentation/widgets/auth_text_form_field.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/helper_functions/validator.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../manager/auth_cubit/auth_cubit.dart';
 
-class ForgetPasswordView extends StatelessWidget {
-  ForgetPasswordView({super.key});
-  final TextEditingController emailController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
+class ForgetPassView extends StatefulWidget {
+  const ForgetPassView({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const CustomAppBar(title: 'Forgot Password'),
-                  Text(
-                    "Don't worry, just enter your e-mail and we will send you the verification code.",
-                    style: AppTextStyles.bodyLargeRegular,
-                  ),
-                  SizedBox(height: 36),
-                  AuthTextFormField(
-                    label: 'Email',
-                    validator: (email) => validateEmail(email!),
-                    controller: emailController,
-                  ),
-                  SizedBox(
-                    height: 21,
-                  ),
-                  PrimaryButton(
-                    label: 'Forgot your password',
-                    onPressed: () {
-                      if (formKey.currentState!.validate()) {}
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  State<ForgetPassView> createState() => _ForgetPassViewState();
+}
+class _ForgetPassViewState extends State<ForgetPassView> {
+  final _form = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  bool _busy = false;
+  String? _error;
+  String? _message;
+  @override
+  void dispose() { _email.dispose(); super.dispose(); }
+  Future<void> _submit() async {
+    if (_busy || _form.currentState?.validate() != true) return;
+    setState(() { _busy = true; _error = null; });
+    try {
+      final message = await context.read<AuthCubit>().repository.forgotPassword(_email.text);
+      if (mounted) setState(() => _message = message);
+    } on ApiFailure catch (failure) { if (mounted) setState(() => _error = failure.message); }
+    catch (_) { if (mounted) setState(() => _error = 'Password recovery could not be requested.'); }
+    finally { if (mounted) setState(() => _busy = false); }
   }
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Account recovery')),
+    body: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Form(key: _form, child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const SizedBox(height: 24), const Text('Let’s get you back in.', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16), const Text('Request a one-time reset link for your account email. The link opens Learnfy’s secure password reset page.'),
+        const SizedBox(height: 24), TextFormField(controller: _email, keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email'), validator: (value) => validateEmail(value ?? '')),
+        const SizedBox(height: 20), if (_error != null) Semantics(liveRegion: true, child: Text(_error!, style: const TextStyle(color: Colors.red))),
+        if (_message != null) Semantics(liveRegion: true, child: Text(_message!)),
+        const SizedBox(height: 16), PrimaryButton(label: _busy ? 'Requesting…' : 'Request reset link', onPressed: _busy ? null : _submit),
+      ],
+    ))),
+  );
 }

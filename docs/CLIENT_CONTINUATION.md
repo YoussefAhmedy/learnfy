@@ -38,3 +38,17 @@ Phone OTP remains explicitly unconfigured, not a prerequisite for real email/pas
 
 Validation, commits, exact progress and next unit must be recorded in CONTINUATION.md before
 ending. The overall requirements matrix remains active; no final PR before product readiness.
+
+### Web milestone
+
+- LearnSpring visual/layout direction reused and connected to actual server DTOs. No static mock
+  catalog/user/order/entitlement/AI or fabricated popularity counters imported.
+- Real URL-based home/catalog/detail/login/register/recovery/account routes, server profile PATCH,
+  runtime schema validation, in-memory expiring sessions and truthful failed logout/recovery.
+- Accessible forms, navigation, no-stale-request loading/retry/empty states and reset-fragment
+  cleanup (including StrictMode regression). Currency is not inferred from historic numeric prices;
+  course page openly notes purchasing/content are not implemented yet.
+- Web type/lint/build/audit and 47 tests pass locally; Vite preview runs on 0.0.0.0:5173.
+  Local backend SDK still unavailable; actual API/DOM browser integration is to run in CI.
+- Mobile real transport/repository/session/login/signup/recovery integration now in progress,
+  preserves existing Poppins/pink theme; do not claim it analyzed/tested until CI confirms.

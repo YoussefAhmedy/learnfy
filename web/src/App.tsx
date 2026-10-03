@@ -1,35 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Route, Routes, Link } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import { AuthProvider } from './features/auth/AuthProvider'
+import { AuthPage } from './features/auth/AuthPage'
+import { AccountPage } from './features/auth/AccountPage'
+import { RecoveryPage } from './features/auth/RecoveryPage'
+import { HomePage } from './features/catalog/HomePage'
+import { CatalogPage } from './features/catalog/CatalogPage'
+import { CoursePage } from './features/catalog/CoursePage'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+export default function App() {
+  return <AuthProvider><Routes><Route element={<Layout />}>
+    <Route index element={<HomePage />} /><Route path="courses" element={<CatalogPage />} /><Route path="courses/:id" element={<CoursePage />} />
+    <Route path="login" element={<AuthPage key="login" mode="login" />} /><Route path="register" element={<AuthPage key="register" mode="register" />} />
+    <Route path="account" element={<AccountPage />} /><Route path="forgot-password" element={<RecoveryPage key="forgot" />} /><Route path="reset-password" element={<RecoveryPage key="reset" reset />} />
+    <Route path="*" element={<div className="container status-panel"><h1>That page isn’t here.</h1><p>Let’s get you back on track.</p><Link className="button" to="/courses">Explore courses</Link></div>} />
+  </Route></Routes></AuthProvider>
 }
-
-export default App

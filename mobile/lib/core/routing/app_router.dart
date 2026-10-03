@@ -6,18 +6,16 @@ import 'package:learnfy/features/user_profile/presentation/views/edit_profile_vi
 import 'package:learnfy/features/user_profile/presentation/views/settings_view.dart';
 import 'package:learnfy/main_screen.dart';
 import 'app_routes.dart';
+import '../../features/auth/presentation/views/login_view.dart';
+import '../../features/auth/presentation/views/forget_pass_view.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.login:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text("login screen"),
-            ),
-          ),
-      );
+        return MaterialPageRoute(builder: (_) => const LoginView());
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgetPassView());
       case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const SignUpPage());
       case AppRoutes.mainScreen:

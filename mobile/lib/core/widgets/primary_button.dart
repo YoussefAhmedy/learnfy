@@ -14,7 +14,7 @@ class PrimaryButton extends StatelessWidget {
   });
 
   final String label;
-  final void Function() onPressed;
+  final VoidCallback? onPressed;
   final double? width;
   final double? height;
   final String? icon;

@@ -1,128 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:learnfy/core/helper_functions/validator.dart';
-import 'package:learnfy/core/widgets/primary_button.dart';
-import 'package:learnfy/features/auth/presentation/manager/sign_up_cubit/sign_up_cubit.dart';
-import 'package:learnfy/features/auth/presentation/widgets/auth_text_form_field.dart';
-import 'package:learnfy/features/auth/presentation/widgets/custom_check_box.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/res/app_icons.dart';
+import '../../../../core/helper_functions/validator.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../widgets/dont_have_account_widget.dart';
-import '../widgets/terms_and_conditions_widget.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../manager/auth_cubit/auth_cubit.dart';
+import '../widgets/auth_text_form_field.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
-
   @override
   State<SignUpPage> createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  late TextEditingController userNameController;
-  late TextEditingController emailController;
-  late TextEditingController passwordController;
-
+  final _form = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _username = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _visible = false;
   @override
-  void initState() {
-    userNameController = TextEditingController();
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
-    super.initState();
+  void dispose() { _name.dispose(); _username.dispose(); _email.dispose(); _password.dispose(); super.dispose(); }
+  Future<void> _submit() async {
+    if (_form.currentState?.validate() != true) return;
+    final success = await context.read<AuthCubit>().register(name: _name.text, username: _username.text, email: _email.text, password: _password.text);
+    // Only a real successful server session grants account access. No fake phone OTP gate.
+    if (mounted && success) Navigator.pushNamedAndRemoveUntil(context, AppRoutes.mainScreen, (_) => false);
   }
-
   @override
-  void dispose() {
-    userNameController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-    return Scaffold(
-      appBar: AppBar(title:Text('New Account')),
-      body: BlocProvider(
-        create: (context) => SignUpCubit(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              Form(
-                key: formKey,
-                child: Column(
-                  children: [
-                    SizedBox(height: 16.0),
-                    AuthTextFormField(
-                      label: 'Full Name',
-                      validator: (username) => validateUsername(username!),
-                      controller: userNameController,
-                    ),
-                    SizedBox(height: 16.0),
-                    AuthTextFormField(
-                      label: 'Email',
-                      validator: (email) => validateEmail(email!),
-                      controller: emailController,
-                    ),
-                    SizedBox(height: 16.0),
-                    BlocBuilder<SignUpCubit, SignUpState>(
-                      builder: (context, state) {
-                        return AuthTextFormField(
-                          onSuffixIconTap: () => context
-                              .read<SignUpCubit>()
-                              .togglePasswordVisible(),
-                          label: 'Password',
-                          suffixIcon: state.isPasswordVisible
-                              ? AppIcons.eyeSlashIcon
-                              : AppIcons.eyeIcon,
-                          obscureText: !state.isPasswordVisible,
-                          validator: (password) => validatePassword(password!),
-                          controller: passwordController,
-                        );
-                      },
-                    ),
-                    SizedBox(height: 16.0),
-                    Row(
-                      children: [
-                        BlocBuilder<SignUpCubit, SignUpState>(
-                          builder: (context, state) {
-                            return CustomCheckbox(
-                              value: state.isTermAccepted,
-                              onChanged: (value) => context
-                                  .read<SignUpCubit>()
-                                  .toggleTermAccept(value),
-                            );
-                          },
-                        ),
-                        SizedBox(width: 16.0),
-                        Expanded(
-                          child: TermsAndConditionsWidget(),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 30.0),
-                    PrimaryButton(
-                      label: 'Create New Account',
-                      onPressed: () {
-                        // validatinon to sign up
-                        // if (formKey.currentState!.validate()) {
-                        //   log('Account created successfully');
-                          
-                        // }
-                        Navigator.pushNamed(context, AppRoutes.otp);
-                      },
-                    ),
-                    SizedBox(height: 23.5),
-                    DontHaveAccountWidget(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('New Account')),
+    body: BlocBuilder<AuthCubit, AuthState>(builder: (context, state) => SingleChildScrollView(
+      padding: const EdgeInsets.all(24), child: Form(key: _form, child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const SizedBox(height: 16), const Text('Your next chapter', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8), const Text('Create your Learnfy account.'), const SizedBox(height: 24),
+          AuthTextFormField(label: 'Full Name', controller: _name, validator: (value) => (value ?? '').trim().length < 2 ? 'Enter at least two characters' : (value!.length > 100 ? 'Name is too long' : null)),
+          const SizedBox(height: 16), AuthTextFormField(label: 'Username', controller: _username, validator: (value) => validateUsername(value ?? '')),
+          const SizedBox(height: 16), AuthTextFormField(label: 'Email', controller: _email, validator: (value) => validateEmail(value ?? '')),
+          const SizedBox(height: 16), TextFormField(controller: _password, obscureText: !_visible,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            decoration: InputDecoration(labelText: 'Password', helperText: 'At least 12 characters; use a unique passphrase.',
+              suffixIcon: IconButton(tooltip: _visible ? 'Hide password' : 'Show password', onPressed: () => setState(() => _visible = !_visible), icon: Icon(_visible ? Icons.visibility_off : Icons.visibility))),
+            validator: (value) => validatePassword(value ?? '')),
+          const SizedBox(height: 20), if (state.error != null) Padding(padding: const EdgeInsets.only(bottom: 16), child: Semantics(liveRegion: true, child: Text(state.error!, style: const TextStyle(color: Colors.red)))),
+          PrimaryButton(label: state.busy ? 'Creating account…' : 'Create New Account', onPressed: state.busy ? null : _submit),
+          const SizedBox(height: 16), TextButton(onPressed: state.busy ? null : () => Navigator.pushReplacementNamed(context, AppRoutes.login), child: const Text('Already have an account? Sign in')),
+        ],
+      )),
+    )),
+  );
 }
