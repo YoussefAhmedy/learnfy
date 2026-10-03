@@ -3,6 +3,7 @@ import 'package:learnfy/core/theme/app_colors.dart';
 
 class AppTheme {
   static ThemeData lightMode = ThemeData.light().copyWith(
+    textTheme: ThemeData.light().textTheme.apply(fontFamily: 'Poppins'),
     appBarTheme: AppBarTheme(
       elevation: 0.0,
       backgroundColor: AppColors.white,
@@ -10,7 +11,7 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.white,
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor:AppColors.primary90, // Button color
+        backgroundColor:AppColors.primary100, // Accessible contrast, same preserved palette
         foregroundColor:AppColors.white,  // Text color
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15), // Pill shape

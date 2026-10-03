@@ -1,58 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:learnfy/features/user_profile/presentation/widgets/settings_item.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../auth/presentation/manager/auth_cubit/auth_cubit.dart';
+import 'settings_item.dart';
 
 class SettingsItemListView extends StatelessWidget {
-  SettingsItemListView({
-    super.key,
-  });
-
-  final List<String> itemNames = [
-    "Courses",
-    "Favourite Courses",
-    "Download List",
-    "My Subscribtions",
-    "Change Language",
-    "Settings",
-    "Help & Technical Support",
-  ];
-
-  final List<IconData> icons = [
-    Icons.menu_book,
-    Icons.bookmark_add_rounded,
-    Icons.file_download,
-    Icons.subscriptions,
-    Icons.language_rounded,
-    Icons.hexagon_rounded,
-    Icons.question_mark,
-  ];
-
-  final List<int> userItemsNumber = [7, 20, 13];
-
+  const SettingsItemListView({super.key});
   @override
-  Widget build(BuildContext context) {
-    final List<void Function()?> onTap = [
-      () {},
-      () {},
-      () {},
-      () {},
-      () {},
-      () {},
-      () {},
-    ];
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      shrinkWrap: true,
-      itemCount: 7,
-      itemBuilder: (context, index) {
-        return SettingsItem(
-          onTap: onTap[index],
-          itemName: itemNames[index],
-          icon: icons[index],
-          userItemsNumber: index < userItemsNumber.length
-              ? userItemsNumber[index]
-              : null,
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(builder: (context, state) => Column(children: [
+    SettingsItem(itemName: 'Explore courses', icon: Icons.menu_book, onTap: () => Navigator.pushNamed(context, AppRoutes.mainScreen)),
+    if (state.session != null) SettingsItem(itemName: 'Edit profile', icon: Icons.person_outline, onTap: () => Navigator.pushNamed(context, AppRoutes.settings)),
+    SettingsItem(itemName: 'Account recovery', icon: Icons.lock_outline, onTap: () => Navigator.pushNamed(context, AppRoutes.forgotPassword)),
+    if (state.session != null) SettingsItem(itemName: 'Sign out', icon: Icons.logout, onTap: () async {
+      await context.read<AuthCubit>().logout();
+      if (context.mounted) Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+    }),
+    if (state.notice != null) Padding(padding: const EdgeInsets.all(16), child: Semantics(liveRegion: true, child: Text(state.notice!))),
+    if (state.error != null) Padding(padding: const EdgeInsets.all(16), child: Semantics(liveRegion: true, child: Text(state.error!, style: const TextStyle(color: Colors.red)))),
+  ]));
 }

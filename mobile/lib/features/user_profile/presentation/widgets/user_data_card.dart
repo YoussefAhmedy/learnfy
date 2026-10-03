@@ -1,69 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:learnfy/core/theme/app_text_styles.dart';
-import 'package:learnfy/features/user_profile/presentation/views/settings_view.dart';
-
-import '../../../../core/res/app_images.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/manager/auth_cubit/auth_cubit.dart';
 
 class UserDataCard extends StatelessWidget {
-  const UserDataCard({
-    super.key,
-  });
-
+  const UserDataCard({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      height: 120,
-      width: double.infinity,
-      decoration: BoxDecoration(color: Colors.grey.shade50),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          CircleAvatar(
-            radius: 30,
-            child: Image.asset(
-              AppImages.profileImg,
-              fit: BoxFit.fill,
-            ),
-          ),
-          SizedBox(
-            width: 10,
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Mahmoud Mostafa",
-                style: AppTextStyles.heading5.copyWith(
-                  // color: Colors.black,
-                ),
-              ),
-              Text(
-                "Sign in",
-                style: AppTextStyles.bodyLargeRegular,
-              ),
-            ],
-          ),
-          SizedBox(
-            width: 5,
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsView()),
-              );
-            },
-            child: Text(
-              "Edit Profile",
-              style: AppTextStyles.bodyLargeRegular.copyWith(
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {
+    final user = state.session?.user;
+    return Container(padding: const EdgeInsets.all(16), color: AppColors.black5, child: Row(children: [
+      CircleAvatar(radius: 30, backgroundColor: AppColors.primary20,
+        child: user == null ? const Icon(Icons.person_outline, color: AppColors.primary100) : Text(user.name.isEmpty ? '?' : user.name[0].toUpperCase(), style: const TextStyle(color: AppColors.primary100, fontSize: 24))),
+      const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(user?.name ?? 'Your Learnfy account', style: AppTextStyles.heading5),
+        Text(user?.email ?? 'Sign in to view your profile', style: AppTextStyles.bodySmallMedium),
+      ])),
+      TextButton(onPressed: () => Navigator.pushNamed(context, user == null ? AppRoutes.login : AppRoutes.settings), child: Text(user == null ? 'Sign in' : 'Edit profile')),
+    ]));
+  });
 }

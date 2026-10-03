@@ -26,6 +26,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const OTPScreen());
       case AppRoutes.settings:
         return MaterialPageRoute(builder: (_) => const SettingsView());
+      case AppRoutes.userprofile:
       case AppRoutes.editprofile:
         return MaterialPageRoute(builder: (_) => const EditProfileView());
       default:
