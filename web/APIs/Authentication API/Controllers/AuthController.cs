@@ -46,6 +46,13 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         return user is null ? Unauthorized() : Ok(user);
     }
 
+    [Authorize, HttpPatch("profile")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var user = await authService.UpdateProfileAsync(CurrentUserId(), request, cancellationToken);
+        return user is null ? Unauthorized() : Ok(user);
+    }
+
     [Authorize, HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {

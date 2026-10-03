@@ -81,6 +81,19 @@ public sealed class AuthService(IUserRepository users, IOptions<JwtSettings> set
         return user is null ? null : UserMapping.ToDto(user);
     }
 
+    public async Task<UserDto?> UpdateProfileAsync(int userId, UpdateProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await users.GetByIdAsync(userId, cancellationToken);
+        if (user is null) return null;
+        // Identity, roles and credential fields are immutable through this profile operation.
+        user.Name = request.Name.Trim();
+        user.Age = request.Age;
+        user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+        await users.UpdateAsync(user, cancellationToken);
+        await users.SaveChangesAsync(cancellationToken);
+        return UserMapping.ToDto(user);
+    }
+
     public async Task LogoutAsync(int userId, CancellationToken cancellationToken = default)
     {
         var user = await users.GetByIdAsync(userId, cancellationToken);

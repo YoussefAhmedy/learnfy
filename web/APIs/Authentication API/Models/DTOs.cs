@@ -42,4 +42,11 @@ public static class PasswordPolicy
 }
 
 public sealed record AuthResponse(bool Success, string Message, string? Token = null, UserDto? User = null, DateTime? ExpiresAt = null);
-public sealed record UserDto(int Id, string Name, string Username, string Email, string Role);
+public sealed record UserDto(int Id, string Name, string Username, string Email, string Role, int Age = 0, string? PhoneNumber = null);
+
+public sealed record UpdateProfileRequest
+{
+    [Required, StringLength(100, MinimumLength = 2)] public string Name { get; init; } = string.Empty;
+    [Range(0, 120)] public int Age { get; init; }
+    [Phone, StringLength(20)] public string? PhoneNumber { get; init; }
+}
