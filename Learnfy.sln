@@ -14,12 +14,30 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Categories", "web\A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Tests", "web\APIs\Learnfy.Tests\Learnfy.Tests.csproj", "{9F225724-6520-5D91-834F-91D96F07E5AA}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Migrations.SqlServer", "web\APIs\Learnfy.Migrations.SqlServer\Learnfy.Migrations.SqlServer.csproj", "{62C46A86-1DEE-5A67-9E86-ADE68F085643}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Migrations.Sqlite", "web\APIs\Learnfy.Migrations.Sqlite\Learnfy.Migrations.Sqlite.csproj", "{9CAAD1EB-D5E0-5F9D-9358-05B65B2046DA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Database", "web\APIs\Learnfy.Database\Learnfy.Database.csproj", "{5C90235A-5924-5052-A4DC-CE9F6C2B7C3E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62C46A86-1DEE-5A67-9E86-ADE68F085643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C46A86-1DEE-5A67-9E86-ADE68F085643}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C46A86-1DEE-5A67-9E86-ADE68F085643}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C46A86-1DEE-5A67-9E86-ADE68F085643}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CAAD1EB-D5E0-5F9D-9358-05B65B2046DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CAAD1EB-D5E0-5F9D-9358-05B65B2046DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CAAD1EB-D5E0-5F9D-9358-05B65B2046DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CAAD1EB-D5E0-5F9D-9358-05B65B2046DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C90235A-5924-5052-A4DC-CE9F6C2B7C3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C90235A-5924-5052-A4DC-CE9F6C2B7C3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C90235A-5924-5052-A4DC-CE9F6C2B7C3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C90235A-5924-5052-A4DC-CE9F6C2B7C3E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Release|Any CPU.ActiveCfg = Release|Any CPU

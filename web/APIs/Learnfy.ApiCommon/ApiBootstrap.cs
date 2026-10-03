@@ -31,15 +31,8 @@ public static class ApiBootstrap
 
         services.AddDbContext<AppDbContext>(options =>
         {
-            var connection = configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrWhiteSpace(connection))
-                throw new InvalidOperationException("Configure ConnectionStrings:DefaultConnection.");
-            switch (configuration["Database:Provider"] ?? "SqlServer")
-            {
-                case "SqlServer": options.UseSqlServer(connection); break;
-                case "Sqlite": options.UseSqlite(connection); break;
-                default: throw new InvalidOperationException("Database:Provider must be SqlServer or Sqlite.");
-            }
+            DatabaseSetup.Configure(options, configuration["Database:Provider"] ?? "SqlServer",
+                configuration.GetConnectionString("DefaultConnection") ?? string.Empty);
         });
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();

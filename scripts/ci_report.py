@@ -54,6 +54,7 @@ elif kind == "backend":
         for error in tree.findall(".//t:ErrorInfo", ns):
             failures.append("\n".join(node.text or "" for node in error))
     allowed_files = list((root / "web/APIs").glob("*/packages.lock.json"))
+    allowed_files += list((root / "web/APIs").glob("Learnfy.Migrations.*/Migrations/*.cs"))
 else:
     raise ValueError("Unknown report kind")
 

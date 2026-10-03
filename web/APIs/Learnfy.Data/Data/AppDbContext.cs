@@ -32,7 +32,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             // Integer minor units preserve money exactly and allow relational sorting on SQLite.
             entity.Property(x => x.Price).HasConversion(new ValueConverter<decimal, long>(
-                amount => checked((long)(amount * 100m)), minorUnits => minorUnits / 100m));
+                amount => Money.ToMinorUnits(amount), minorUnits => minorUnits / 100m));
             entity.Property(x => x.Rating).HasConversion<double>();
             entity.HasOne(x => x.CategoryInfo).WithMany(x => x.Courses)
                 .HasForeignKey(x => x.Category).HasPrincipalKey(x => x.Name).OnDelete(DeleteBehavior.Restrict);

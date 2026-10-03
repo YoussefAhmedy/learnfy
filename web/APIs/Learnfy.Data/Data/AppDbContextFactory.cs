@@ -11,9 +11,7 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
         var connection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
             ?? throw new InvalidOperationException("Set ConnectionStrings__DefaultConnection before running migration commands.");
         var options = new DbContextOptionsBuilder<AppDbContext>();
-        if (provider == "Sqlite") options.UseSqlite(connection);
-        else if (provider == "SqlServer") options.UseSqlServer(connection);
-        else throw new InvalidOperationException("Database__Provider must be SqlServer or Sqlite.");
+        DatabaseSetup.Configure(options, provider, connection);
         return new AppDbContext(options.Options);
     }
 }

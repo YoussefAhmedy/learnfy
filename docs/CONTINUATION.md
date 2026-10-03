@@ -74,7 +74,15 @@ on a sibling directory surviving a later recovery. No existing application work 
 
 ## Current phase / next exact task
 
-Phase 1 recovery complete; **Phase 2 stabilization checkpoint implemented, backend/mobile validation pending**.
+Phase 1 recovery complete; **Phase 2 stabilization validated**.
+Run [37092308199](https://github.com/YoussefAhmedy/learnfy/actions/runs/37092308199):
+web type/lint/build/audit + 13 tests PASS; all .NET builds + 9 API/relational tests PASS;
+Flutter analyze + 8 product/validator/OTP tests PASS. No tests disabled.
+
+**Phase 3/5 database deployment work in progress**: two provider-specific migration assemblies,
+guarded database CLI, recovered catalog development seed, exact money validation. Next CI
+will generate migrations from the real EF model; lock graph temporarily regenerates because
+three projects were added. Import generated code/locks, inspect and test, then restore locked mode.
 
 ### Added/fixed in this continuation
 
