@@ -28,7 +28,7 @@ are not exposed. Ranking preserves the original rating/editorial formula; it is 
 
 Categories (`5058`):
 - `GET /api/categories`, `/api/categories/popular?count=5`
-- `GET /api/categories/{id}`, `/api/categories/by-name/{name}` → active public details
+- `GET /api/categories/{id}`, `/api/categories/by-name/{name}` (legacy `{name}` alias retained) → active public details
 - `includeInactive=true` requires Admin; course counts are computed from published rows
 
 Every service: `/health/live`, `/health/ready`; development-only `/openapi/v1.json`.

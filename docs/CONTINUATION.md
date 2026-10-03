@@ -72,20 +72,33 @@ checkpoint metadata did not. Full history was re-fetched and the bundle regenera
 the checkout**. Persist checkpoint history remotely or in an in-checkout Git bundle; do not rely
 on a sibling directory surviving a later recovery. No existing application work was lost.
 
-## Current phase / next exact task
+## Current checkpoint / phase
 
-Phase 1 recovery complete; **Phase 2 stabilization validated**.
-Run [37092308199](https://github.com/YoussefAhmedy/learnfy/actions/runs/37092308199):
-web type/lint/build/audit + 13 tests PASS; all .NET builds + 9 API/relational tests PASS;
-Flutter analyze + 8 product/validator/OTP tests PASS. No tests disabled.
+**Recovery and core stabilization are complete and validated; the full product is NOT complete.**
+Phases 1–2 and the original core database portion of phases 3/5 are implemented. All remaining
+requirements are still active in [REQUIREMENTS.md](REQUIREMENTS.md). Stop at this safe unit if
+context/session limits approach; do not bolt fake commerce/AI onto an incomplete client.
 
-**Phase 3/5 database deployment work in progress**: two provider-specific migration assemblies,
-guarded database CLI, recovered catalog development seed, exact money validation. Next CI
-generated both provider migrations from the real EF model (run 37093032815): all builds,
-16 backend tests, 14 web tests and 8 mobile tests PASS. Generated code/locks recovered through
-Check API and inspected. SQLite apply/current-model/rollback, unknown-table preservation and
-exact integer prices pass. Locked mode restored; one-time generation step removed.
-Next CI additionally runs a REAL isolated SQL Server container and the guarded dev setup script.
+Key commits on the fixed branch: `a7a0983` recovery checkpoint, `ec3f16c` API/auth foundation,
+`75fdf8b` onboarding fix, `32f2ce0` migration/money tests, `18a6411` preserved generated migrations
+and real SQL Server/dev-setup validation, `30699d5` email acknowledgement/readiness/proxy hardening.
+All pushed as **checkpoints, not a final release**. No new tags; original branches/history retained.
+No PR: product requirements are not ready; creating a final PR now would be premature.
+
+Last confirmed run [37093667187](https://github.com/YoussefAhmedy/learnfy/actions/runs/37093667187) at code checkpoint `30699d5`:
+14 web tests + typecheck/lint/production build/audit PASS; all 9 .NET projects + **20** API/
+relational/email-worker/SQL Server migration tests PASS; Flutter analyze + **8** product/validator/
+OTP tests PASS; guarded development setup smoke PASS. Local web revalidation also PASS.
+No tests disabled and no credentials fabricated. Checkpoint is safe to resume from.
+
+Provider migrations are generated, inspected, committed and compiled:
+- SQL Server `20261003032401_InitialLearnfy`
+- SQLite `20261003032406_InitialLearnfy`
+
+The one-time generator CI step was removed; restore is locked again. Fresh SQLite and actual
+SQL Server apply/reapply/current-model/rollback/unknown-table preservation pass; no production
+DB has been connected or modified. Development catalog is an explicit recovered sample seed,
+not production data, invalid test users, or fake enrollments. See [DATABASE.md](DATABASE.md).
 
 ### Added/fixed in this continuation
 
@@ -123,44 +136,53 @@ Next CI additionally runs a REAL isolated SQL Server container and the guarded d
   Vite binds 0.0.0.0, accepts preview hosts and proxies APIs; no browser-facing localhost URLs.
   Product UI remains the original starter until core stabilization passes.
 - Pinned-action CI for web, all .NET projects/relational API tests, Flutter analyze/tests.
-  GitHub administrative permissions query is 403 (not needed for ordinary workflows); run-list
-  API works. Remote checks/push availability still must be established.
+  GitHub admin permissions endpoint is 403 (not needed); actual pushes/checks/reporting work.
 
-### Validation so far
+### Validation / environment reality
 
-- Web `npm run validate`: PASS (typecheck, lint, 13 tests, production build).
-- Web `npm audit --audit-level=high`: PASS, zero vulnerabilities (all dependencies).
-- All six .csproj XML/project-reference checks: PASS; `git diff --check`: PASS.
-- CI run [37091418373](https://github.com/YoussefAhmedy/learnfy/actions/runs/37091418373): web PASS,
-  .NET restore/build/tests PASS; Flutter analyze PASS, tests 7 PASS / 1 FAIL. Failure is in
-  the onboarding widget test; the test advanced time without starting the scheduled animation.
-  Removed duplicate PageController animations and corrected deterministic frame synchronization.
-  Next CI must confirm the fix; Flutter framework diagnostics are also captured from print events. Remote log/artifact downloads also
-  fail TLS EOF. Added a GitHub Check API reporting channel; do not skip or weaken the failing test.
-  CI confirms 9/9 backend API/relational tests passing. Lockfiles recovered through Check API
-  reports and committed; NuGet restores now enforce locked mode. Local SDK downloads remain
-  blocked. Pushed recovery/stabilization checkpoints only; no final PR.
-- Provider migrations generated/compiled/inspected: SQL Server `20261003032401_InitialLearnfy`,
-  SQLite `20261003032406_InitialLearnfy`. SQLite migration apply/reapply/current-model/rollback
-  and unknown-schema guard tests PASS. Real SQL Server migration/rollback/guard test added to
-  CI with a random disposable database/password; never deletes configured user databases.
-  No production database is configured/applied. API runtime never uses EnsureCreated.
-  Development scripts and database adoption guidance added; CI smoke test still pending.
+- Web checks run locally AND in CI; latest 14 tests/type/lint/build/audit pass.
+- Actual .NET/Flutter/SQL Server/migration/setup checks run in GitHub Actions, not fabricated
+  locally. This sandbox lacks their toolchains and cannot download Microsoft/Google/NuGet or
+  runner logs/artifacts (TLS EOF). GitHub API/npm/git are available.
+- `scripts/ci_report.py` exposes test diagnostics and whitelisted compressed lock/migration
+  files in Check API output without credentials. Check `Learnfy backend test report` /
+  `Learnfy mobile test report` using `gh api repos/YoussefAhmedy/learnfy/commits/<sha>/check-runs`.
+  Decode the `learnfy-ci-files:v1` gzip/base64 JSON marker only for trusted generated file paths.
+- .NET warning/audit errors remain enabled; no tests disabled, no failure-to-success fallback.
+  Flutter fake OTP removed. Email 202 means requested/queued, never falsely 'sent'. Worker only
+  marks mail accepted after a real successful provider acknowledgement, not just HTTP 200.
+- Production HTTPS/trusted proxy IPs/DB/keys/mail remain configuration and validation work.
 
-### Resume immediately here
+### Exact next task for a new session
 
-1. Read the "Learnfy mobile test report" check output after the next CI push; fix the one failing
-   widget test/product defect. Read backend counts and generated lockfiles from the corresponding
-   Check API output. Never print secret environment variables or provider bodies in reports.
-   Do not stack commerce/AI/new UI on an unvalidated core. No final PR yet.
-2. Generate **separate SQL Server / SQLite migration assemblies** against the actual shared
-   context; inspect and test upgrade/rollback, money conversion and constraints. Do not reuse
-   SQL Server-only column definitions in SQLite or suppress pending-model-change warnings.
-3. Add explicit dev initialization/recovered catalog opt-in; do not fake enrollments/production
-   data. No real existing database is configured; legacy schema adoption must be documented.
-4. Finish authentication clients/profile, then actual catalog UI preserving mobile branding;
-   commerce/provider verification, notifications, AI, admin/support follow the requirement matrix.
-5. Revalidate, update this handoff/matrix, and checkpoint after each safe unit.
+1. Verify Git status/current refs and latest CI at resume. Code checkpoint `30699d5` is fully
+   green (20 backend, 14 web, 8 mobile); later final checkpoint only updates handoff/docs.
+   Re-fetch full refs if Arena restores shallow Git metadata; all commits are remotely durable.
+2. **Next unfinished product work: authentication/client integration**. Existing web is the Vite
+   counter; mobile login/tabs/signup remain mostly presentation-only. Build actual API adapters /
+   auth/session/profile state and catalog UI from verified server contracts. Preserve mobile
+   Poppins/pink design, assets and layers. Do NOT redesign or replace backend services from zero.
+3. Add real browser/contract tests against the migrated development stack. Finish unknown/error /
+   expiry/accessibility/RTL/loading/empty states without static fake API data. Keep preview URLs
+   relative through the server proxy; mobile needs an explicit production HTTPS API base URL.
+4. Then continue the request phases/matrix: currency/domain/content + cart/checkout/orders/
+   signed payment verification/entitlements, notifications, bounded authorized AI, admin/support,
+   accessibility/performance and Docker/deploy/observability. These are NOT finished and are not
+   merely missing credentials. Implement/test/checkpoint each; no premature 'final' PR.
+5. Apply no initial migration to a legacy DB. Follow explicit backup/adoption guidance if a real
+   database is supplied. Never delete completed migrations or replace locked dependencies blindly.
+
+### Configuration not yet supplied
+
+- Production SQL Server/shared strong JWT issuer/audience/key and restricted runtime identity.
+- Production reverse proxy/TLS, exact trusted proxy IPs (`Proxy:KnownProxies`), allowed hosts/CORS.
+- Resend verified sender/key/public HTTPS web URL, persistent/restricted/shared protection keys,
+  actual delivery validation and outbox failure/retention operations.
+- Native mobile API URL; backend SMS provider/authorization/cost controls (OTP intentionally blocked).
+- Commerce currency/provider/webhook configuration AFTER that integration is actually implemented;
+  AI key/cost limits AFTER authorized provider code is implemented; deployment/monitoring/backup target.
+
+These are not completed by an example environment variable or a successful isolated test.
 
 ## What should not be touched
 
