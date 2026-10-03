@@ -1,32 +1,24 @@
+import 'dart:convert';
+
 String? validateUsername(String username) {
-  if (username.trim().isEmpty) {
-    return 'Username is required';
-  } else if (username.length < 3) {
-    return 'Username must be at least 3 characters';
-  } else if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
-    return 'Username contains invalid characters';
+  if (username.trim().isEmpty) return 'Username is required';
+  if (!RegExp(r'^[a-zA-Z0-9_]{3,30}$').hasMatch(username)) {
+    return 'Use 3–30 letters, numbers or underscores';
   }
   return null;
 }
 
 String? validateEmail(String email) {
-  if (email.trim().isEmpty) {
-    return 'Email is required';
-  } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+  if (email.trim().isEmpty) return 'Email is required';
+  if (email.length > 255 || !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email.trim())) {
     return 'Invalid email format';
   }
   return null;
 }
 
 String? validatePassword(String password) {
-  if (password.isEmpty) {
-    return 'Password is required';
-  } else if (password.length < 8) {
-    return 'Password must be at least 8 characters';
-  } else if (!RegExp(r'[A-Z]').hasMatch(password)) {
-    return 'Password must contain at least one uppercase letter';
-  } else if (!RegExp(r'[0-9]').hasMatch(password)) {
-    return 'Password must contain at least one number';
-  }
+  if (password.isEmpty) return 'Password is required';
+  if (password.length < 12) return 'Password must be at least 12 characters';
+  if (utf8.encode(password).length > 72) return 'Password must not exceed 72 UTF-8 bytes';
   return null;
 }

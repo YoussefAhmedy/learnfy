@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Data", "web\APIs\Learnfy.Data\Learnfy.Data.csproj", "{1012FA99-5939-51D4-8CE7-93A02BD6223C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.ApiCommon", "web\APIs\Learnfy.ApiCommon\Learnfy.ApiCommon.csproj", "{AAD64BE4-1846-536A-9FC2-EDD461A28C7B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Auth", "web\APIs\Authentication API\IBSRA.csproj", "{B9EE40BD-339D-5107-B843-38C4BF405930}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Courses", "web\APIs\Course Recommendations API\IBSRA&2.csproj", "{207AAB3B-AA97-5293-A26E-3BCE25A6ACE5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Categories", "web\APIs\Categories API\IBSRA&3.csproj", "{6DD0953A-21E4-5643-B5E9-44772C42BBD0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Learnfy.Tests", "web\APIs\Learnfy.Tests\Learnfy.Tests.csproj", "{9F225724-6520-5D91-834F-91D96F07E5AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1012FA99-5939-51D4-8CE7-93A02BD6223C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAD64BE4-1846-536A-9FC2-EDD461A28C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAD64BE4-1846-536A-9FC2-EDD461A28C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAD64BE4-1846-536A-9FC2-EDD461A28C7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAD64BE4-1846-536A-9FC2-EDD461A28C7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9EE40BD-339D-5107-B843-38C4BF405930}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9EE40BD-339D-5107-B843-38C4BF405930}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9EE40BD-339D-5107-B843-38C4BF405930}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9EE40BD-339D-5107-B843-38C4BF405930}.Release|Any CPU.Build.0 = Release|Any CPU
+		{207AAB3B-AA97-5293-A26E-3BCE25A6ACE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{207AAB3B-AA97-5293-A26E-3BCE25A6ACE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{207AAB3B-AA97-5293-A26E-3BCE25A6ACE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{207AAB3B-AA97-5293-A26E-3BCE25A6ACE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD0953A-21E4-5643-B5E9-44772C42BBD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD0953A-21E4-5643-B5E9-44772C42BBD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD0953A-21E4-5643-B5E9-44772C42BBD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD0953A-21E4-5643-B5E9-44772C42BBD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F225724-6520-5D91-834F-91D96F07E5AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F225724-6520-5D91-834F-91D96F07E5AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F225724-6520-5D91-834F-91D96F07E5AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F225724-6520-5D91-834F-91D96F07E5AA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

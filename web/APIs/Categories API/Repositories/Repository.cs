@@ -1,94 +1,33 @@
-using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Threading.Tasks;
-using IBSRA.Data;
 using IBSRA.Models;
+using Microsoft.EntityFrameworkCore;
+using YourApp.Data;
 
-namespace IBSRA.Repositories
+namespace IBSRA.Repositories;
+
+public sealed class CategoryRepository(AppDbContext context) : ICategoryRepository
 {
-    public class CategoryRepository : ICategoryRepository
+    public Task<List<Category>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        Project(context.Categories.AsNoTracking().OrderBy(category => category.DisplayOrder).ThenBy(category => category.Name))
+            .ToListAsync(cancellationToken);
+    public Task<List<Category>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default) =>
+        Project(context.Categories.AsNoTracking().Where(category => category.IsActive)
+            .OrderBy(category => category.DisplayOrder).ThenBy(category => category.Name)).ToListAsync(cancellationToken);
+    public Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+        Project(context.Categories.AsNoTracking().Where(category => category.IsActive && category.ID == id)).FirstOrDefaultAsync(cancellationToken);
+    public Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default) =>
+        Project(context.Categories.AsNoTracking().Where(category => category.IsActive && category.Name == name.Trim())).FirstOrDefaultAsync(cancellationToken);
+    public Task<List<Category>> GetPopularCategoriesAsync(int count, CancellationToken cancellationToken = default) =>
+        Project(context.Categories.AsNoTracking().Where(category => category.IsActive)
+            .OrderByDescending(category => category.Courses.Count(course => course.IsPublished))
+            .ThenBy(category => category.ID).Take(count)).ToListAsync(cancellationToken);
+
+    private static IQueryable<Category> Project(IQueryable<Category> query) => query.Select(category => new Category
     {
-        protected readonly AppDbContext _context;
-
-        public CategoryRepository(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        public virtual async Task<IEnumerable<Category>> GetAllAsync()
-        {
-            return await _context.Categories
-                .Include(c => c.Courses)
-                .ToListAsync();
-        }
-
-        public virtual async Task<Category> GetByIdAsync(int id)
-        {
-            return await _context.Categories
-                .Include(c => c.Courses)
-                .FirstOrDefaultAsync(c => c.ID == id);
-        }
-
-        public async Task<Category> GetByNameAsync(string name)
-        {
-            return await _context.Categories
-                .Include(c => c.Courses)
-                .FirstOrDefaultAsync(c => c.Name == name);
-        }
-
-        public async Task<IEnumerable<Category>> GetActiveCategoriesAsync()
-        {
-            return await _context.Categories
-                .Include(c => c.Courses)
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.DisplayOrder)
-                .ThenBy(c => c.Name)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Category>> GetPopularCategoriesAsync(int count)
-        {
-            return await _context.Categories
-                .Include(c => c.Courses)
-                .Where(c => c.IsActive)
-                .OrderByDescending(c => c.Courses.Count)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        public virtual async Task<Category> AddAsync(Category entity)
-        {
-            _context.Categories.Add(entity);
-            await _context.SaveChangesAsync();
-            return entity;
-        }
-
-        public virtual async Task UpdateAsync(Category entity)
-        {
-            _context.Entry(entity).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-        }
-
-        public virtual async Task DeleteAsync(int id)
-        {
-            var entity = await _context.Categories.FindAsync(id);
-            if (entity != null)
-            {
-                _context.Categories.Remove(entity);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public virtual async Task<int> CountAsync()
-        {
-            return await _context.Categories.CountAsync();
-        }
-
-        public virtual async Task<int> CountActiveAsync()
-        {
-            return await _context.Categories.CountAsync(c => c.IsActive);
-        }
-    }
+        ID = category.ID, Name = category.Name, Description = category.Description, IconUrl = category.IconUrl,
+        Color = category.Color, IsActive = category.IsActive, DisplayOrder = category.DisplayOrder,
+        CreatedAt = category.CreatedAt, UpdatedAt = category.UpdatedAt,
+        CourseCount = category.Courses.Count(course => course.IsPublished),
+        Courses = category.Courses.Where(course => course.IsPublished).OrderByDescending(course => course.Rating)
+            .ThenBy(course => course.Id).Take(5).ToList()
+    });
 }

@@ -1,21 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using IBSRA.Models;
 
-namespace IBSRA.Repositories
+namespace IBSRA.Repositories;
+
+public interface ICategoryRepository
 {
-    public interface ICategoryRepository
-    {
-        Task<IEnumerable<Category>> GetAllAsync();
-        Task<Category> GetByIdAsync(int id);
-        Task<Category> GetByNameAsync(string name);
-        Task<IEnumerable<Category>> GetActiveCategoriesAsync();
-        Task<IEnumerable<Category>> GetPopularCategoriesAsync(int count);
-        Task<Category> AddAsync(Category entity);
-        Task UpdateAsync(Category entity);
-        Task DeleteAsync(int id);
-        Task<int> CountAsync();
-        Task<int> CountActiveAsync();
-    }
+    Task<List<Category>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
+    Task<List<Category>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default);
+    Task<List<Category>> GetPopularCategoriesAsync(int count, CancellationToken cancellationToken = default);
 }

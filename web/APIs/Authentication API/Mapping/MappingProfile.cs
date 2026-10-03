@@ -1,14 +1,10 @@
-﻿using AutoMapper;
 using YourApp.Models;
 using YourApp.Models.DTOs;
 
-namespace YourApp.Mapping
+namespace YourApp.Mapping;
+
+public static class UserMapping
 {
-    public class MappingProfile : Profile
-    {
-        public MappingProfile()
-        {
-            CreateMap<User, UserDto>();
-        }
-    }
+    // Explicitly allowlist public fields; password/reset/security stamp never leave the server.
+    public static UserDto ToDto(User user) => new(user.Id, user.Name, user.Username, user.Email, user.Role);
 }

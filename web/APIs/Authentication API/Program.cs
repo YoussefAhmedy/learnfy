@@ -1,76 +1,20 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using YourApp.Data;
-using YourApp.Services;
+using Learnfy.ApiCommon;
 using YourApp.Repositories;
-using YourApp.Mapping;
+using YourApp.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace YourApp.AuthApi;
 
-// Add services
-builder.Services.AddControllers();
-
-// Database
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-// Repository Layer
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-// Service Layer
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-
-// CORS
-builder.Services.AddCors(options =>
+public sealed class Program
 {
-    options.AddDefaultPolicy(policy =>
+    public static async Task Main(string[] args)
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddLearnfyApi(builder.Configuration);
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddLearnfyEmail(builder.Configuration, builder.Environment);
+        var app = builder.Build();
+        app.UseLearnfyApi();
+        await app.RunAsync();
+    }
 }
-
-app.UseHttpsRedirection();
-app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();

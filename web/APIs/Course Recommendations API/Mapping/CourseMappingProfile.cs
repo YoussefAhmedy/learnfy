@@ -1,20 +1,14 @@
-using AutoMapper;
 using YourApp.Models;
 using YourApp.Models.DTOs;
 
-namespace YourApp.Mapping
-{
-    public class CourseMappingProfile : Profile
-    {
-        public CourseMappingProfile()
-        {
-            // Course to CourseDto mapping
-            CreateMap<Course, CourseDto>();
+namespace YourApp.Mapping;
 
-            // Course to CourseRecommendationDto mapping with custom RecommendationScore logic
-            CreateMap<Course, CourseRecommendationDto>()
-                .ForMember(dest => dest.RecommendationScore, opt => opt.MapFrom(src =>
-                    src.IsRecommended ? (src.Rating ?? 0) * 1.2m : (src.Rating ?? 0)));
-        }
-    }
+public static class CourseMapping
+{
+    public static CourseDto ToDto(Course course) => new(course.Id, course.CourseName, course.Category, course.ImageUrl,
+        course.Description, course.Instructor, course.Duration, course.Rating, course.Price, course.IsRecommended);
+    public static CourseRecommendationDto ToRecommendation(Course course, bool personalized = false) => new(
+        course.Id, course.CourseName, course.Category, course.ImageUrl, course.Description, course.Instructor, course.Duration,
+        course.Rating, course.Price, personalized ? (course.Rating ?? 0) * 1.5m + (course.IsRecommended ? 2m : 0m)
+            : (course.Rating ?? 0) * (course.IsRecommended ? 1.2m : 1m));
 }

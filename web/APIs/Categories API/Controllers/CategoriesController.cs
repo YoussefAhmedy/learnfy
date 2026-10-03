@@ -1,47 +1,36 @@
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Cors;
+using System.ComponentModel.DataAnnotations;
 using IBSRA.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace IBSRA.Controllers
+namespace IBSRA.Controllers;
+
+[ApiController]
+[Route("api/categories")]
+public sealed class CategoriesController(ICategoryService categoryService) : ControllerBase
 {
-    [EnableCors(origins: "*", headers: "*", methods: "*")]
-    [RoutePrefix("api/categories")]
-    public class CategoriesController : ApiController
+    [HttpGet]
+    public async Task<IActionResult> All([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
     {
-        private readonly ICategoryService _categoryService;
-
-        public CategoriesController(ICategoryService categoryService)
+        if (includeInactive)
         {
-            _categoryService = categoryService;
+            if (User.Identity?.IsAuthenticated != true) return Unauthorized();
+            if (!User.IsInRole("Admin")) return Forbid();
         }
-
-        [HttpGet, Route("")]
-        public async Task<IHttpActionResult> GetAllCategories([FromUri] bool includeInactive = false)
-        {
-            var result = await _categoryService.GetAllCategoriesAsync(includeInactive);
-            return Ok(result);
-        }
-
-        [HttpGet, Route("popular")]
-        public async Task<IHttpActionResult> GetPopularCategories([FromUri] int count = 5)
-        {
-            var result = await _categoryService.GetPopularCategoriesAsync(count);
-            return Ok(result);
-        }
-
-        [HttpGet, Route("{id:int}")]
-        public async Task<IHttpActionResult> GetCategoryById(int id)
-        {
-            var result = await _categoryService.GetCategoryByIdAsync(id);
-            return Ok(result);
-        }
-
-        [HttpGet, Route("{name}")]
-        public async Task<IHttpActionResult> GetCategoryByName(string name)
-        {
-            var result = await _categoryService.GetCategoryByNameAsync(name);
-            return Ok(result);
-        }
+        return Ok(await categoryService.GetAllCategoriesAsync(includeInactive, cancellationToken));
+    }
+    [HttpGet("popular")]
+    public async Task<IActionResult> Popular([FromQuery, Range(1, 20)] int count = 5, CancellationToken cancellationToken = default) =>
+        Ok(await categoryService.GetPopularCategoriesAsync(count, cancellationToken));
+    [HttpGet("{id:int:min(1)}")]
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        var result = await categoryService.GetCategoryByIdAsync(id, cancellationToken);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+    [HttpGet("by-name/{name}")]
+    public async Task<IActionResult> ByName(string name, CancellationToken cancellationToken)
+    {
+        var result = await categoryService.GetCategoryByNameAsync(name, cancellationToken);
+        return result.Success ? Ok(result) : NotFound(result);
     }
 }

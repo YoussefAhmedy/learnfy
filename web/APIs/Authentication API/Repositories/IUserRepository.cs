@@ -1,17 +1,14 @@
 using YourApp.Models;
 
-namespace YourApp.Repositories
+namespace YourApp.Repositories;
+
+public interface IUserRepository
 {
-    public interface IUserRepository
-    {
-        Task<User?> GetByEmailAsync(string email);
-        Task<User?> GetByUsernameAsync(string username);
-        Task<User?> GetByResetTokenAsync(string resetToken);
-        Task<bool> EmailExistsAsync(string email);
-        Task<bool> UsernameExistsAsync(string username);
-        Task<bool> EmailOrUsernameExistsAsync(string email, string username);
-        Task<User> CreateAsync(User user);
-        Task UpdateAsync(User user);
-        Task SaveChangesAsync();
-    }
+    Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<bool> EmailOrUsernameExistsAsync(string email, string username, CancellationToken cancellationToken = default);
+    Task<User> CreateAsync(User user, CancellationToken cancellationToken = default);
+    Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<bool> ConsumeResetTokenAsync(string tokenHash, string passwordHash, DateTime now, CancellationToken cancellationToken = default);
 }

@@ -1,150 +1,65 @@
 using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.Models;
+using YourApp.Models.DTOs;
 
-namespace YourApp.Repositories
+namespace YourApp.Repositories;
+
+public sealed class CourseRepository(AppDbContext context) : ICourseRepository
 {
-    public class CourseRepository : ICourseRepository
+    private IQueryable<Course> Published => context.Courses.AsNoTracking().Where(course => course.IsPublished && course.CategoryInfo.IsActive);
+
+    public Task<Course?> GetByIdAsync(int courseId, CancellationToken cancellationToken = default) =>
+        Published.FirstOrDefaultAsync(course => course.Id == courseId, cancellationToken);
+
+    public Task<List<Course>> GetExcludingCourseIdsAsync(List<int> excludedCourseIds, int count, CancellationToken cancellationToken = default) =>
+        Published.Where(course => !excludedCourseIds.Contains(course.Id))
+            .OrderByDescending(course => (double)(course.Rating ?? 0) * 1.5d + (course.IsRecommended ? 2d : 0d))
+            .ThenBy(course => course.Id).Take(count).ToListAsync(cancellationToken);
+
+    public Task<List<Course>> GetTopRatedAsync(int count, CancellationToken cancellationToken = default) =>
+        Published.OrderByDescending(course => course.Rating).ThenBy(course => course.Id).Take(count).ToListAsync(cancellationToken);
+
+    public Task<List<Course>> SearchCoursesAsync(CourseSearchRequest request, CancellationToken cancellationToken = default)
     {
-        private readonly AppDbContext _context;
-
-        public CourseRepository(AppDbContext context)
+        var query = BuildSearch(request);
+        var descending = request.SortOrder == "desc";
+        var sorted = request.SortBy switch
         {
-            _context = context;
-        }
+            "price" => descending ? query.OrderByDescending(course => course.Price) : query.OrderBy(course => course.Price),
+            "name" => descending ? query.OrderByDescending(course => course.CourseName) : query.OrderBy(course => course.CourseName),
+            "newest" => descending ? query.OrderByDescending(course => course.CreatedAt) : query.OrderBy(course => course.CreatedAt),
+            "recommended" => descending
+                ? query.OrderByDescending(course => (double)(course.Rating ?? 0) * (course.IsRecommended ? 1.2d : 1d))
+                : query.OrderBy(course => (double)(course.Rating ?? 0) * (course.IsRecommended ? 1.2d : 1d)),
+            _ => descending ? query.OrderByDescending(course => course.Rating) : query.OrderBy(course => course.Rating)
+        };
+        // Global, deterministic ordering MUST precede pagination.
+        return sorted.ThenBy(course => course.Id).Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToListAsync(cancellationToken);
+    }
 
-        public async Task<Course?> GetByIdAsync(int courseId)
+    public Task<int> GetSearchCountAsync(CourseSearchRequest request, CancellationToken cancellationToken = default) =>
+        BuildSearch(request).CountAsync(cancellationToken);
+
+    public Task<List<int>> GetUserRecommendedCourseIdsAsync(int userId, CancellationToken cancellationToken = default) =>
+        context.UserCourseRecommendations.AsNoTracking().Where(item => item.UserId == userId)
+            .Select(item => item.CourseId).ToListAsync(cancellationToken);
+
+    private IQueryable<Course> BuildSearch(CourseSearchRequest request)
+    {
+        var query = Published;
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            return await _context.Courses
-                .FirstOrDefaultAsync(c => c.Id == courseId);
+            var term = request.SearchTerm.Trim().ToLowerInvariant();
+            query = query.Where(course => course.CourseName.ToLower().Contains(term) ||
+                (course.Description != null && course.Description.ToLower().Contains(term)) ||
+                (course.Instructor != null && course.Instructor.ToLower().Contains(term)));
         }
-
-        public async Task<List<Course>> GetByCategoryAsync(string category, int page, int pageSize)
-        {
-            return await _context.Courses
-                .Where(c => c.Category == category)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
-
-        public async Task<List<Course>> GetExcludingCourseIdsAsync(List<int> excludedCourseIds, int count)
-        {
-            return await _context.Courses
-                .Where(c => !excludedCourseIds.Contains(c.Id))
-                .OrderByDescending(c => c.Rating)
-                .ThenByDescending(c => c.IsRecommended)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        public async Task<List<Course>> GetTopRatedAsync(int count)
-        {
-            return await _context.Courses
-                .OrderByDescending(c => c.Rating)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        public async Task<List<Course>> SearchCoursesAsync(
-            string? searchTerm,
-            string? category,
-            decimal? minPrice,
-            decimal? maxPrice,
-            decimal? minRating,
-            string? instructor,
-            int page,
-            int pageSize)
-        {
-            var query = _context.Courses.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                var searchTermLower = searchTerm.ToLower();
-                query = query.Where(c => 
-                    c.CourseName.ToLower().Contains(searchTermLower) ||
-                    c.Description!.ToLower().Contains(searchTermLower) ||
-                    c.Instructor!.ToLower().Contains(searchTermLower)
-                );
-            }
-
-            if (!string.IsNullOrEmpty(category))
-                query = query.Where(c => c.Category == category);
-
-            if (minPrice.HasValue)
-                query = query.Where(c => c.Price >= minPrice);
-
-            if (maxPrice.HasValue)
-                query = query.Where(c => c.Price <= maxPrice);
-
-            if (minRating.HasValue)
-                query = query.Where(c => c.Rating >= minRating);
-
-            if (!string.IsNullOrEmpty(instructor))
-                query = query.Where(c => c.Instructor == instructor);
-
-            return await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
-
-        public async Task<int> GetTotalCountAsync()
-        {
-            return await _context.Courses.CountAsync();
-        }
-
-        public async Task<int> GetCategoryCountAsync(string category)
-        {
-            return await _context.Courses
-                .Where(c => c.Category == category)
-                .CountAsync();
-        }
-
-        public async Task<int> GetSearchCountAsync(
-            string? searchTerm,
-            string? category,
-            decimal? minPrice,
-            decimal? maxPrice,
-            decimal? minRating,
-            string? instructor)
-        {
-            var query = _context.Courses.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                var searchTermLower = searchTerm.ToLower();
-                query = query.Where(c => 
-                    c.CourseName.ToLower().Contains(searchTermLower) ||
-                    c.Description!.ToLower().Contains(searchTermLower) ||
-                    c.Instructor!.ToLower().Contains(searchTermLower)
-                );
-            }
-
-            if (!string.IsNullOrEmpty(category))
-                query = query.Where(c => c.Category == category);
-
-            if (minPrice.HasValue)
-                query = query.Where(c => c.Price >= minPrice);
-
-            if (maxPrice.HasValue)
-                query = query.Where(c => c.Price <= maxPrice);
-
-            if (minRating.HasValue)
-                query = query.Where(c => c.Rating >= minRating);
-
-            if (!string.IsNullOrEmpty(instructor))
-                query = query.Where(c => c.Instructor == instructor);
-
-            return await query.CountAsync();
-        }
-
-        public async Task<List<int>> GetUserRecommendedCourseIdsAsync(int userId)
-        {
-            return await _context.UserCourseRecommendations
-                .Where(ucr => ucr.UserId == userId)
-                .Select(ucr => ucr.CourseId)
-                .ToListAsync();
-        }
+        if (!string.IsNullOrWhiteSpace(request.Category)) query = query.Where(course => course.Category == request.Category.Trim());
+        if (!string.IsNullOrWhiteSpace(request.Instructor)) query = query.Where(course => course.Instructor == request.Instructor.Trim());
+        if (request.MinPrice.HasValue) query = query.Where(course => course.Price >= request.MinPrice.Value);
+        if (request.MaxPrice.HasValue) query = query.Where(course => course.Price <= request.MaxPrice.Value);
+        if (request.MinRating.HasValue) query = query.Where(course => course.Rating >= request.MinRating.Value);
+        return query;
     }
 }

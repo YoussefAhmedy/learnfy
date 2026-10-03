@@ -74,20 +74,69 @@ on a sibling directory surviving a later recovery. No existing application work 
 
 ## Current phase / next exact task
 
-Phase 1 recovery audit is complete. Next: **Phase 2 stabilization**.
+Phase 1 recovery complete; **Phase 2 stabilization checkpoint implemented, backend/mobile validation pending**.
 
-1. Preserve reproducible web install (lockfile, explicit check/test scripts) and add honest tests.
-2. Resolve toolchain availability; run all three backend builds to capture baseline failures.
-3. Fix existing API compilation/DI/configuration while preserving repository/service layers.
-   Reconcile missing/shared database types deliberately; no blind branch merge or duplicate
-   migrations. Add tests for fixes, auth isolation, pagination and error status handling.
-4. Replace mobile's stale generated test with actual onboarding/validation tests; stop fake OTP
-   success. Preserve UI and do not imply an SMS provider exists.
-5. Record every validation result/blocker here; checkpoint before expanding business scope.
+### Added/fixed in this continuation
 
-Later phases retain every requirement theme in the matrix. Do not open a final PR or label
-unfinished/unvalidated functionality production-ready. If the session cannot finish everything,
-end at a tested logical checkpoint with the next task written here.
+- Preserved three existing API service/repository layers. Shared `Learnfy.Data` now owns the
+  recovered User/Course/Category/context; categories relate to courses by unique category name
+  (historical schema intent), avoiding two conflicting course tables. Prices persist as exact
+  integer cents; ratings use relational numeric conversion. Unique normalized identities,
+  recommendation FK/uniqueness, and data constraints are configured.
+- Target .NET 10 LTS / SDK 10.0.401 / EF and ASP.NET 10.0.12, verified from official metadata.
+  .NET 8 approaches end of support; old APIs did not build. No unsupported preview SDK.
+- Removed AutoMapper 12 dependency because verified high-severity
+  [GHSA-rvv3-g6hj-g44x](https://github.com/advisories/GHSA-rvv3-g6hj-g44x). Explicit allowlisted
+  DTO mappings preserve existing shapes/scoring without a new licensed dependency.
+- Repaired invalid project refs, missing context/DI, plural course routes, legacy EF6/Web API/
+  Unity incompatibility, nullability and JWT audience typo. Replaced legacy host stubs with
+  real ASP.NET Core registrations. Generated `obj`/user files untracked, not erased from history.
+  Removed generated random weather endpoints; they are not Learnfy product functionality.
+- Auth: BCrypt (12 rounds, 72 UTF-8 byte bound), validated inputs, normalized unique identities,
+  real HTTP status codes, current-user/logout, 15-minute signed access tokens, security-stamp
+  validation across APIs, atomic hashed one-use password reset and session invalidation.
+- Email: real Resend HTTP integration, encrypted transactional outbox, leased bounded worker,
+  idempotency header, bounded retries/failure codes. Missing config returns explicit 503 (never
+  returns raw token/claims mail sent). Real provider/inbox delivery still needs external validation.
+- Categories: real bounded SQL counts/top-five projections; public inactive details hidden;
+  inactive listing requires Admin. Courses: common filters/count query, stable sort BEFORE paging,
+  bounded query validation, verified-subject personalized endpoint (not caller userId).
+- Common safe ProblemDetails/trace IDs, no-store/nosniff/referrer headers, exact CORS allowlist,
+  throttling, liveness/readiness and development-only OpenAPI.
+- Mobile: preserved theme/assets/layout; removed delay-based fake OTP and unconditional navigation,
+  explicit unconfigured gateway, provider-only success, proper E.164/six-digit input, real resend
+  action, no hard-coded phone, controller disposal. Phone verification **still requires a real
+  backend SMS gateway**. Signup/login integration remains unfinished, not claimed complete.
+- Web: supported ESLint 10, deterministic lockfile, type/lint/test/build scripts, Vitest,
+  same-origin relative transport with honest errors/cancellation and 13 regression tests.
+  Vite binds 0.0.0.0, accepts preview hosts and proxies APIs; no browser-facing localhost URLs.
+  Product UI remains the original starter until core stabilization passes.
+- Pinned-action CI for web, all .NET projects/relational API tests, Flutter analyze/tests.
+  GitHub administrative permissions query is 403 (not needed for ordinary workflows); run-list
+  API works. Remote checks/push availability still must be established.
+
+### Validation so far
+
+- Web `npm run validate`: PASS (typecheck, lint, 13 tests, production build).
+- Web `npm audit --audit-level=high`: PASS, zero vulnerabilities (all dependencies).
+- All six .csproj XML/project-reference checks: PASS; `git diff --check`: PASS.
+- Backend source/tests and mobile fixes are **NOT YET COMPILED/EXECUTED**; local SDK/toolchain
+  downloads remain blocked. A validation checkpoint push may trigger CI; that is NOT a final PR.
+- No migrations have been generated/applied yet. Runtime must not use EnsureCreated or blindly
+  apply historical SQL. Relational test database alone uses EnsureCreated for isolated tests.
+
+### Resume immediately here
+
+1. Run CI on the fixed session branch; inspect actual compiler/analyzer/test failures and fix
+   them. Do not stack commerce/AI/new UI on an unvalidated core. No final PR yet.
+2. Generate **separate SQL Server / SQLite migration assemblies** against the actual shared
+   context; inspect and test upgrade/rollback, money conversion and constraints. Do not reuse
+   SQL Server-only column definitions in SQLite or suppress pending-model-change warnings.
+3. Add explicit dev initialization/recovered catalog opt-in; do not fake enrollments/production
+   data. No real existing database is configured; legacy schema adoption must be documented.
+4. Finish authentication clients/profile, then actual catalog UI preserving mobile branding;
+   commerce/provider verification, notifications, AI, admin/support follow the requirement matrix.
+5. Revalidate, update this handoff/matrix, and checkpoint after each safe unit.
 
 ## What should not be touched
 

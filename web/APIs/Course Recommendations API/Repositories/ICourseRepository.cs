@@ -1,31 +1,14 @@
 using YourApp.Models;
+using YourApp.Models.DTOs;
 
-namespace YourApp.Repositories
+namespace YourApp.Repositories;
+
+public interface ICourseRepository
 {
-    public interface ICourseRepository
-    {
-        Task<Course?> GetByIdAsync(int courseId);
-        Task<List<Course>> GetByCategoryAsync(string category, int page, int pageSize);
-        Task<List<Course>> GetExcludingCourseIdsAsync(List<int> excludedCourseIds, int count);
-        Task<List<Course>> GetTopRatedAsync(int count);
-        Task<List<Course>> SearchCoursesAsync(
-            string? searchTerm,
-            string? category,
-            decimal? minPrice,
-            decimal? maxPrice,
-            decimal? minRating,
-            string? instructor,
-            int page,
-            int pageSize);
-        Task<int> GetTotalCountAsync();
-        Task<int> GetCategoryCountAsync(string category);
-        Task<int> GetSearchCountAsync(
-            string? searchTerm,
-            string? category,
-            decimal? minPrice,
-            decimal? maxPrice,
-            decimal? minRating,
-            string? instructor);
-        Task<List<int>> GetUserRecommendedCourseIdsAsync(int userId);
-    }
+    Task<Course?> GetByIdAsync(int courseId, CancellationToken cancellationToken = default);
+    Task<List<Course>> SearchCoursesAsync(CourseSearchRequest request, CancellationToken cancellationToken = default);
+    Task<int> GetSearchCountAsync(CourseSearchRequest request, CancellationToken cancellationToken = default);
+    Task<List<Course>> GetExcludingCourseIdsAsync(List<int> excludedCourseIds, int count, CancellationToken cancellationToken = default);
+    Task<List<Course>> GetTopRatedAsync(int count, CancellationToken cancellationToken = default);
+    Task<List<int>> GetUserRecommendedCourseIdsAsync(int userId, CancellationToken cancellationToken = default);
 }

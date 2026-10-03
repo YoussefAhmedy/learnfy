@@ -1,25 +1,20 @@
-﻿using AutoMapper;
 using IBSRA.Models;
 using IBSRA.DTOs;
-using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace IBSRA.Mapping
+namespace IBSRA.Mapping;
+
+public static class CategoryMapping
 {
-    public class MappingProfile : Profile
+    public static CategorySummaryDto ToSummary(Category category) => new()
     {
-        public MappingProfile()
-        {
-            CreateMap<Category, CategorySummaryDto>();
-            CreateMap<Category, CategoryDetailsDto>()
-                .AfterMap((src, dest, context) =>
-                {
-                    // Map popular courses using AutoMapper instead of manual mapping
-                    dest.PopularCourses = context.Mapper.Map<List<CourseDto>>(
-                        src.Courses?.OrderByDescending(c => c.Rating).Take(5).ToList() ?? new List<Course>()
-                    );
-                });
-            CreateMap<Course, CourseDto>();
-        }
-    }
+        ID = category.ID, Name = category.Name, Description = category.Description, IconUrl = category.IconUrl,
+        Color = category.Color, CourseCount = category.CourseCount
+    };
+    public static CategoryDetailsDto ToDetails(Category category) => new()
+    {
+        ID = category.ID, Name = category.Name, Description = category.Description, IconUrl = category.IconUrl,
+        Color = category.Color, CourseCount = category.CourseCount, IsActive = category.IsActive, DisplayOrder = category.DisplayOrder,
+        PopularCourses = category.Courses.Select(course => new CourseDto(course.Id, course.CourseName, course.Description,
+            course.ImageUrl, course.Instructor, course.Duration, course.Rating, course.Price)).ToList()
+    };
 }

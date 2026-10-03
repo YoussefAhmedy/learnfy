@@ -6,18 +6,11 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage', 'APIs', 'playwright-report', 'test-results']),
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
+    extends: [js.configs.recommended, tseslint.configs.recommended,
+      reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
+    languageOptions: { ecmaVersion: 2022, globals: { ...globals.browser, ...globals.node } },
   },
 ])
