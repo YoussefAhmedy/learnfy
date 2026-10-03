@@ -27,7 +27,7 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
         var result = await categoryService.GetCategoryByIdAsync(id, cancellationToken);
         return result.Success ? Ok(result) : NotFound(result);
     }
-    [HttpGet("by-name/{name}")]
+    [HttpGet("by-name/{name}"), HttpGet("{name}")]
     public async Task<IActionResult> ByName(string name, CancellationToken cancellationToken)
     {
         var result = await categoryService.GetCategoryByNameAsync(name, cancellationToken);

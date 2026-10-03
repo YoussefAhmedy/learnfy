@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Net;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +21,17 @@ public static class ApiBootstrap
 {
     public static IServiceCollection AddLearnfyApi(this IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            // Framework loopback defaults remain; add only explicitly trusted reverse proxies.
+            foreach (var proxy in configuration.GetSection("Proxy:KnownProxies").Get<string[]>() ?? [])
+            {
+                if (!IPAddress.TryParse(proxy, out var address))
+                    throw new InvalidOperationException("Proxy:KnownProxies must contain literal trusted proxy IP addresses.");
+                options.KnownProxies.Add(address);
+            }
+        });
         services.AddControllers();
         services.AddOpenApi();
         services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
@@ -103,6 +116,7 @@ public static class ApiBootstrap
 
     public static WebApplication UseLearnfyApi(this WebApplication app)
     {
+        app.UseForwardedHeaders();
         app.UseExceptionHandler();
         app.Use(async (context, next) =>
         {

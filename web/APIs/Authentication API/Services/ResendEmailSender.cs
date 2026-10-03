@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 
 namespace YourApp.Services;
@@ -16,5 +17,17 @@ public sealed class ResendEmailSender(HttpClient client, IOptions<EmailSettings>
         // Do not log provider response bodies: they may contain a reset URL or recipient.
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException("Email provider rejected the request.", null, response.StatusCode);
+        try
+        {
+            var acknowledgement = await response.Content.ReadFromJsonAsync<ProviderAcknowledgement>(cancellationToken);
+            if (string.IsNullOrWhiteSpace(acknowledgement?.Id))
+                throw new HttpRequestException("Email provider did not acknowledge the message.");
+        }
+        catch (JsonException exception)
+        {
+            throw new HttpRequestException("Email provider returned an unreadable acknowledgement.", exception);
+        }
     }
+
+    private sealed record ProviderAcknowledgement(string Id);
 }
