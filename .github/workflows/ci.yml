@@ -72,6 +72,39 @@ jobs:
             TestResults/
             web/APIs/**/packages.lock.json
           retention-days: 7
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore Learnfy.sln --locked-mode
+      - run: dotnet build Learnfy.sln --configuration Release --no-restore
+      - run: bash scripts/setup-development.sh --seed
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - run: npm run test:browser --prefix web
+      - name: Publish real browser test diagnostics
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/ci_report.py browser '${{ job.status }}'
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: browser-validation
+          path: |
+            web/test-results/
+            web/playwright-report/
+            .cache/browser-stack/
+          retention-days: 7
   mobile:
     runs-on: ubuntu-24.04
     timeout-minutes: 15

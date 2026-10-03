@@ -59,6 +59,24 @@ elif kind == "backend":
             failures.append("\n".join(node.text or "" for node in error))
     allowed_files = list((root / "web/APIs").glob("*/packages.lock.json"))
     allowed_files += list((root / "web/APIs").glob("Learnfy.Migrations.*/Migrations/*.cs"))
+elif kind == "browser":
+    report = root / "web/test-results/browser.json"
+    if report.exists():
+        data = json.loads(report.read_text())
+        stats = data.get("stats", {})
+        summary.append("Browser integration: " + json.dumps(stats, sort_keys=True))
+        def walk(suites):
+            for suite in suites:
+                walk(suite.get("suites", []))
+                for spec in suite.get("specs", []):
+                    for test in spec.get("tests", []):
+                        for result in test.get("results", []):
+                            for error in result.get("errors", []):
+                                failures.append(spec.get("title", "") + "\n" + error.get("message", ""))
+        walk(data.get("suites", []))
+    else:
+        summary.append("Browser report not generated; inspect startup/build steps.")
+    allowed_files = []
 else:
     raise ValueError("Unknown report kind")
 

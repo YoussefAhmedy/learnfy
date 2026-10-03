@@ -1,0 +1,73 @@
+// Browser tests against real .NET services + migrated SQLite; no intercepted API success.
+import { test, expect } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+
+test('catalog discovery/search/detail work against the migrated recovered catalog', async ({ page, request }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: /your next chapter/ })).toBeVisible()
+  await expect(page.getByText('64K+')).toHaveCount(0)
+  await page.getByRole('link', { name: /Explore courses/ }).first().click()
+  await expect(page.getByText('10 courses', { exact: true })).toBeVisible()
+  await page.getByLabel('Search catalog').fill('Python')
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(page.getByText('1 course for “Python”', { exact: true })).toBeVisible()
+  await page.getByRole('heading', { name: 'Complete Python Programming' }).getByRole('link').click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Complete Python Programming' })).toBeVisible()
+  await expect(page.getByText(/no payment is requested/)).toBeVisible()
+  expect((await request.get('/api/courses/recommendations/personalized')).status()).toBe(401)
+})
+
+test('registration/profile/session reload/login/logout are server-authoritative', async ({ page, request }) => {
+  const suffix = Date.now().toString(36)
+  const email = `browser_${suffix}@example.test`
+  const password = 'browser-test-only-unique-passphrase'
+  await page.goto('/account')
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByRole('link', { name: 'Create an account', exact: true }).click()
+  await page.getByLabel('Full name').fill('Browser Learner')
+  await page.getByLabel('Username', { exact: true }).fill(`browser_${suffix}`)
+  await page.getByLabel('Email address').fill(email)
+  await page.getByLabel('Password', { exact: true }).fill(password)
+  const registered = page.waitForResponse(response => response.url().endsWith('/api/auth/register'))
+  await page.getByRole('button', { name: 'Create account', exact: true }).click()
+  const registration = await (await registered).json()
+  expect(registration.success).toBe(true)
+  await expect(page.getByRole('heading', { name: 'Hello, Browser.' })).toBeVisible()
+  await page.getByLabel('Full name').fill('Updated Browser')
+  await page.getByLabel('Age', { exact: true }).fill('31')
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click()
+  await expect(page.getByText('Your profile was saved.', { exact: true })).toBeVisible()
+  const profile = await request.get('/api/auth/me', { headers: { Authorization: `Bearer ${registration.token}` } })
+  expect((await profile.json()).name).toBe('Updated Browser')
+  await page.reload()
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByLabel('Email address').fill(email)
+  await page.getByLabel('Password', { exact: true }).fill(password)
+  const signedIn = page.waitForResponse(response => response.url().endsWith('/api/auth/login'))
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  const login = await (await signedIn).json()
+  await expect(page.getByRole('heading', { name: 'Hello, Updated.' })).toBeVisible()
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page.getByText(/active sessions have been revoked/)).toBeVisible()
+  expect((await request.get('/api/auth/me', { headers: { Authorization: `Bearer ${login.token}` } })).status()).toBe(401)
+})
+
+test('unconfigured recovery exposes a real service error, never fake delivery', async ({ page }) => {
+  await page.goto('/forgot-password')
+  await page.getByLabel('Email address').fill('unconfigured@example.test')
+  await page.getByRole('button', { name: 'Request reset link' }).click()
+  await expect(page.getByRole('alert')).toContainText('unavailable')
+  await expect(page.getByText(/email has been requested/)).toHaveCount(0)
+})
+
+test('responsive navigation and catalog remain accessible without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/courses')
+  await expect(page.getByRole('heading', { name: 'What’s your next chapter?' })).toBeVisible()
+  await expect(page.getByText('10 courses', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  expect(results.violations.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) }))).toEqual([])
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Account' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+})
