@@ -19,6 +19,9 @@ failures = []
 summary = []
 if kind == "mobile":
     report = root / "mobile/test-results.jsonl"
+    analyzer_log = root / "mobile/analyze-results.log"
+    if status != "success" and analyzer_log.exists():
+        failures.append(analyzer_log.read_text(errors="replace")[-16000:])
     passed = failed = 0
     printed = []
     if report.exists():
