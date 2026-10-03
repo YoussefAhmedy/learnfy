@@ -117,3 +117,23 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+# Learnfy toolchains, local secrets and runtime artifacts
+.recovery/
+.cache/
+**/bin/
+**/obj/
+**/*.csproj.user
+**/*.suo
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.db
+*.db-shm
+*.db-wal
+**/TestResults/
+**/playwright-report/
+**/test-results/
+# Application lockfiles are reproducibility artifacts.
+!**/pubspec.lock
+!**/packages.lock.json
