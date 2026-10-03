@@ -13,6 +13,9 @@ void main() {
     expect(find.text('Welcome to Your Learning Journey'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
     await tester.tap(find.text('Next'));
+    // Start the scheduled animation before advancing its clock. Lottie loops,
+    // so pumpAndSettle would never be an appropriate synchronization primitive.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Learn at Your Own Pace'), findsOneWidget);
     expect(tester.takeException(), isNull);

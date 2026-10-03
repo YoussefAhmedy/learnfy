@@ -86,10 +86,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                           _navigateToSignUpScreen(context);
                         } else {
                           context.read<OnboardingCubit>().nextPage();
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeInOut,
-                          );
+                          // The Bloc listener owns the page animation; do not start
+                          // a second competing animation from the button.
                         }
                       },
                       height: 60,

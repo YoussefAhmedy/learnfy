@@ -20,6 +20,7 @@ summary = []
 if kind == "mobile":
     report = root / "mobile/test-results.jsonl"
     passed = failed = 0
+    printed = []
     if report.exists():
         for line in report.read_text().splitlines():
             try:
@@ -28,6 +29,8 @@ if kind == "mobile":
                 continue
             if not isinstance(event, dict):
                 continue
+            if event.get("type") == "print":
+                printed.append(str(event.get("message", "")))
             if event.get("type") == "error":
                 failures.append(str(event.get("error", "")) + "\n" + str(event.get("stackTrace", "")))
             if event.get("type") == "testDone" and not event.get("hidden", False):
@@ -35,6 +38,8 @@ if kind == "mobile":
                     passed += 1
                 else:
                     failed += 1
+        if failed:
+            failures = printed + failures
         summary.append(f"Mobile tests: {passed} passed; {failed} failed.")
     else:
         summary.append("Mobile test report was not generated; inspect prior job steps.")

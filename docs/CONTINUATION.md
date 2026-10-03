@@ -121,10 +121,14 @@ Phase 1 recovery complete; **Phase 2 stabilization checkpoint implemented, backe
 - Web `npm audit --audit-level=high`: PASS, zero vulnerabilities (all dependencies).
 - All six .csproj XML/project-reference checks: PASS; `git diff --check`: PASS.
 - CI run [37091418373](https://github.com/YoussefAhmedy/learnfy/actions/runs/37091418373): web PASS,
-  .NET restore/build/tests PASS; Flutter analyze PASS, tests 7 PASS / 1 FAIL. Failure appears in
-  the product widget test; exact diagnostic not yet available. Remote log/artifact downloads also
+  .NET restore/build/tests PASS; Flutter analyze PASS, tests 7 PASS / 1 FAIL. Failure is in
+  the onboarding widget test; the test advanced time without starting the scheduled animation.
+  Removed duplicate PageController animations and corrected deterministic frame synchronization.
+  Next CI must confirm the fix; Flutter framework diagnostics are also captured from print events. Remote log/artifact downloads also
   fail TLS EOF. Added a GitHub Check API reporting channel; do not skip or weaken the failing test.
-  Local SDK downloads remain blocked. Pushed recovery/stabilization checkpoints only; no final PR.
+  CI confirms 9/9 backend API/relational tests passing. Lockfiles recovered through Check API
+  reports and committed; NuGet restores now enforce locked mode. Local SDK downloads remain
+  blocked. Pushed recovery/stabilization checkpoints only; no final PR.
 - No migrations have been generated/applied yet. Runtime must not use EnsureCreated or blindly
   apply historical SQL. Relational test database alone uses EnsureCreated for isolated tests.
 
